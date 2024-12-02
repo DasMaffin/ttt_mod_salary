@@ -10,6 +10,5 @@ hook.Add("PlayerSay", "SalaryChatCommand", function(ply, text, teamChat)
         
         -- Return false to prevent the chat message from showing up
         return ""
-        
     end
 end)
