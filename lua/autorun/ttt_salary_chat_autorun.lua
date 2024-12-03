@@ -7,6 +7,12 @@ if SERVER then
             error("[Salary Mod] Failed to load ULib: " .. tostring(err))
         end
     end
+
+    if not file.Exists("salary_mod", "DATA") then
+        file.CreateDir("salary_mod")
+        print("[Salary Mod] Created folder: salary_mod")
+    end
+    
     AddCSLuaFile("cl_mod_salary.lua")
     include("sv_mod_salary.lua")
 else

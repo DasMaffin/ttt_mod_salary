@@ -24,7 +24,7 @@ if SERVER then
 
     local function saveRolePointValues()
         file.Write("salary_mod/role_point_values.txt", util.TableToJSON(rolePointValues))
-        print("Role point values saved.")
+        print("[Salary Mod] Role point values saved.")
     end
 
     local function loadRolePointValues()
@@ -53,15 +53,15 @@ if SERVER then
     local function tryGrantSalary(ply, salary)
         if not IsValid(ply) or not ply:IsPlayer() then return end
     
-        local steamID = ply:SteamID64() -- Use SteamID64 for uniqueness
+        local steamID = ply:SteamID64() -- Use SteamID64 for uniqueness, make string or else the JSON serializer serializes the number in scientific notation.
         local currentTime = os.time()
-        local filePath = "player_times.txt"
+        local filePath = "salary_mod/player_times.txt"
     
         -- Load or create the data file
         local playerTimes = {}
         if file.Exists(filePath, "DATA") then
             local fileContent = file.Read(filePath, "DATA")
-            playerTimes = util.JSONToTable(fileContent) or {}
+            playerTimes = util.JSONToTable(fileContent, false, true) or {}
         end
     
         -- Calculate the timestamp for the last Monday at 00:01
@@ -78,7 +78,7 @@ if SERVER then
     
         -- Check if the player exists in the file
         local lastRecordedTime = playerTimes[steamID] or 0
-    
+        
         if lastRecordedTime >= lastMondayTimestamp then
             -- Player's last time is after last Monday 00:01, so do nothing
             sendChatMessage(ply, "Your salary has already been granted, dont be greedy!")
@@ -117,17 +117,14 @@ if SERVER then
             return true -- Prevent the message from showing in chat
         end        
     end)    
-end
-
---[[ Console command to set point values for roles
-console command: modsalary role amount
-This will grant the amount to role when calling !salary
-Arguments:
-    role - the ulx role name, by default e.g. user, moderator, operator, superadmin.
-    amount - amount of Pontshop 2 points to be awarded to the specified role 
-]]--
-concommand.Add("modsalary", function(ply, cmd, args)
-    if SERVER then -- Pull this out of the if server from above and remove client functionality so you still get the suggestion in the console
+    --[[ Console command to set point values for roles
+    console command: modsalary role amount
+    This will grant the amount to role when calling !salary
+    Arguments:
+        role - the ulx role name, by default e.g. user, moderator, operator, superadmin.
+        amount - amount of Pontshop 2 points to be awarded to the specified role 
+    ]]--
+    concommand.Add("modsalary", function(ply, cmd, args)
         -- Ensure only people with the salarymod.manage permission can execute the command
         if IsValid(ply) and not ULib.ucl.query(ply, "salarymod.manage") then
             ply:PrintMessage(HUD_PRINTCONSOLE, "You do not have permission to use this command.")
@@ -151,7 +148,8 @@ concommand.Add("modsalary", function(ply, cmd, args)
 
         -- Set the point value for the role
         rolePointValues[role] = points
-        sendChatMessage(ply, "Set point value for role '" .. role .. "': " .. points)
         saveRolePointValues()
-    end
-end)
+        sendChatMessage(ply, "Set point value for role '" .. role .. "': " .. points)
+    end)
+end
+
