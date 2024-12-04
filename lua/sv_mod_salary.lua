@@ -107,14 +107,14 @@ if SERVER then
             local pointsToAdd = rolePointValues[userRole]
             if not pointsToAdd then
                 sendChatMessage(ply, "Your role is unknown or unhandled: " .. tostring(userRole))
-                return true
+                return ""
             end
             tryGrantSalary(ply, pointsToAdd)
-            return true -- Prevent the message from showing in chat
+            return "" -- Prevent the message from showing in chat
         elseif string.lower(text) == "!salaries" and IsValid(ply) and ULib.ucl.query(ply, "salarymod.view") then
             sendAllRolePointValues(ply)
 
-            return true -- Prevent the message from showing in chat
+            return "" -- Prevent the message from showing in chat
         end        
     end)    
     --[[ Console command to set point values for roles
