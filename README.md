@@ -16,3 +16,5 @@ You can set up a salary for any ULX role in Pointshop 2 standard points. Your mo
 - `modsalary <role> <amount>`  
   Example: `modsalary superadmin 1000`  
   Sets the salary by amount for a role. Requires `salarymod.manage` permission.
+
+Steam Workshop: https://steamcommunity.com/sharedfiles/filedetails/?id=3377005106
