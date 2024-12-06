@@ -5,9 +5,7 @@ You can set up a salary for any ULX role in Pointshop 2 standard points. Your mo
 
 
 ULX Permissions:
-
 salarymod.manage - Needed to change salary amounts per role
-
 salarymod.view - Needed to see the salaries for all roles
 
 
