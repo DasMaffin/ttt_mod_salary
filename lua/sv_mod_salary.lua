@@ -1,35 +1,27 @@
+SalaryMod = Salary or {}
+SalaryMod.rolePointValues = {}
 if SERVER then
-    --[[
-        Permissions:
-        salarymod.manage - allows you to set the salary values for roles.
-        salarymod.view - allows you to view which role receives how much salary
-    ]]--
-    ULib.ucl.registerAccess("salarymod.manage", "superadmin", "Allows managing Salary Mod roles and points.", "Salary Mod")
-    ULib.ucl.registerAccess("salarymod.view", "superadmin", "Allows viewing Salary Mod roles and points.", "Salary Mod")
-
-    local rolePointValues = {
-    }
-
-
     util.AddNetworkString("SalaryModMessage") -- Register the network message
 
-    local function sendChatMessage(ply, message)
+    function SalaryMod:sendChatMessage(ply, message)
         if IsValid(ply) and ply:IsPlayer() then
             print(message)
             net.Start("SalaryModMessage")
             net.WriteString(message)
             net.Send(ply) -- Send the message to the specific player
+        else
+            print("Invalid player")
         end
     end
 
-    local function saveRolePointValues()
-        file.Write("salary_mod/role_point_values.txt", util.TableToJSON(rolePointValues))
+    function SalaryMod:saveRolePointValues()
+        file.Write("salary_mod/role_point_values.txt", util.TableToJSON(SalaryMod.rolePointValues))
         print("[Salary Mod] Role point values saved.")
     end
 
     local function loadRolePointValues()
         if file.Exists("salary_mod/role_point_values.txt", "DATA") then
-            rolePointValues = util.JSONToTable(file.Read("salary_mod/role_point_values.txt", "DATA"))
+            SalaryMod.rolePointValues = util.JSONToTable(file.Read("salary_mod/role_point_values.txt", "DATA"))
             print("Saved role point values loaded.")
         else
             print("No saved role point values found. Using defaults.")
@@ -38,9 +30,8 @@ if SERVER then
 
     local function sendAllRolePointValues(ply)
         local message = "Current Role Point Values:\n"
-    
-        for role, points in pairs(rolePointValues) do
-            message = message .. role .. ": " .. points .. " points\n"
+        for role, points in pairs(SalaryMod.rolePointValues) do
+            message = message .. role .. ": " .. points["points"] .. " points, " .. points["donatorPoints"] .. " donator points. \n"
         end
     
         -- Split the message into chunks to avoid exceeding chat limits
@@ -50,9 +41,9 @@ if SERVER then
         end
     end
 
-    local function tryGrantSalary(ply, salary)
+    local function tryGrantSalary(ply, salary, donSalary)
         if not IsValid(ply) or not ply:IsPlayer() then return end
-    
+
         local steamID = ply:SteamID64() -- Use SteamID64 for uniqueness, make string or else the JSON serializer serializes the number in scientific notation.
         local currentTime = os.time()
         local filePath = "salary_mod/player_times.txt"
@@ -78,19 +69,19 @@ if SERVER then
     
         -- Check if the player exists in the file
         local lastRecordedTime = playerTimes[steamID] or 0
-        
         if lastRecordedTime >= lastMondayTimestamp then
             -- Player's last time is after last Monday 00:01, so do nothing
-            sendChatMessage(ply, "Your salary has already been granted, dont be greedy!")
+            SalaryMod:sendChatMessage(ply, "Your salary has already been granted, dont be greedy!")
             return
         end
-    
+
         -- Update the player's time and save to file
         playerTimes[steamID] = currentTime
         file.Write(filePath, util.TableToJSON(playerTimes, true))
-        
-        ply:PS2_AddStandardPoints(salary)    
-        sendChatMessage(ply, "You received: " .. tostring(salary) .. " Ponitshop points.")
+
+        ply:PS2_AddStandardPoints(salary) 
+        ply:PS2_AddPremiumPoints(donSalary)   
+        SalaryMod:sendChatMessage(ply, "You received: " .. tostring(salary) .. " Pointshop points and " .. tostring(donSalary) .. " Premium points.")
     end
     
 
@@ -101,22 +92,27 @@ if SERVER then
         !salaries - shows a list of all set salary values
     ]]--
     hook.Add("PlayerSay", "TTTModSalaryCommand", function(ply, text, teamChat, isDead)
-        if string.lower(text) == "!salary" then
+        local input = string.lower(text)
+        if input == "!salary" or input == "!reward"  then
             local userRole = ply:GetUserGroup()
+            
+            local pointsToAdd = (SalaryMod.rolePointValues[userRole]).points
+            local donatorPointsToAdd = (SalaryMod.rolePointValues[userRole]).donatorPoints
 
-            local pointsToAdd = rolePointValues[userRole]
             if not pointsToAdd then
-                sendChatMessage(ply, "Your role is unknown or unhandled: " .. tostring(userRole))
+                SalaryMod:sendChatMessage(ply, "Your role is unknown or unhandled: " .. tostring(userRole))
                 return ""
             end
-            tryGrantSalary(ply, pointsToAdd)
+
+            tryGrantSalary(ply, pointsToAdd, donatorPointsToAdd)
             return "" -- Prevent the message from showing in chat
-        elseif string.lower(text) == "!salaries" and IsValid(ply) and ULib.ucl.query(ply, "salarymod.view") then
+        elseif input == "!salaries" and IsValid(ply) and ULib.ucl.query(ply, "salarymod.view") then
             sendAllRolePointValues(ply)
 
             return "" -- Prevent the message from showing in chat
         end        
     end)    
+    
     --[[ Console command to set point values for roles
     console command: modsalary role amount
     This will grant the amount to role when calling !salary
@@ -139,17 +135,12 @@ if SERVER then
 
         -- Parse arguments
         local role = args[1]
-        local points = tonumber(args[2])
-
-        if not points then
-            print("Invalid points value. Please provide a number.")
-            return
-        end
+        local points = tonumber(args[2]) or 0
+        local donatorPoints = tonumber(args[3]) or 0
 
         -- Set the point value for the role
-        rolePointValues[role] = points
-        saveRolePointValues()
-        sendChatMessage(ply, "Set point value for role '" .. role .. "': " .. points)
+        SalaryMod.rolePointValues[role] = { points = points, donatorPoints = donatorPoints }
+        SalaryMod:saveRolePointValues()
+        SalaryMod:sendChatMessage(ply, "Set point value for role '" .. role .. "': " .. points)
     end)
 end
-
