@@ -102,13 +102,14 @@ if SERVER then
         if input == "!salary" or input == "!reward"  then
             local userRole = ply:GetUserGroup()
             
-            local pointsToAdd = (SalaryMod.rolePointValues[userRole]).points
-            local donatorPointsToAdd = (SalaryMod.rolePointValues[userRole]).donatorPoints
 
-            if not pointsToAdd then
+            if not SalaryMod.rolePointValues[userRole] then
                 SalaryMod:sendChatMessage(ply, "Your role is unknown or unhandled: " .. tostring(userRole))
                 return ""
             end
+
+            local pointsToAdd = (SalaryMod.rolePointValues[userRole]).points
+            local donatorPointsToAdd = (SalaryMod.rolePointValues[userRole]).donatorPoints
 
             tryGrantSalary(ply, pointsToAdd, donatorPointsToAdd)
             return "" -- Prevent the message from showing in chat

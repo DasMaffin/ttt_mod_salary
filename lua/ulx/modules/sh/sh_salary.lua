@@ -47,7 +47,7 @@ local roleNames = {
 
 -- Register the ULX command
 local setSalaryCommand = ulx.command(CATEGORY_NAME, "ulx setsalary", SetRolePointValues, "!SetSalary")
-setSalaryCommand:addParam{type = ULib.cmds.StringArg, label = "Group: ", completes = roleNames, hint = "Groupname", error = "Please select a valid user group!", ULib.cmds.restrictToCompletes}
+setSalaryCommand:addParam{type = ULib.cmds.StringArg, label = "Group: ", completes = roleNames, hint = "Groupname", error = "Please select a valid user group!"}
 setSalaryCommand:addParam{type = ULib.cmds.NumArg, hint = "Standard point salary:", min = 0, max = 1000000, error = "Please enter a valid number!"}
 setSalaryCommand:addParam{type = ULib.cmds.NumArg, hint = "Donator pooint salary:", min = 0, max = 1000000, error = "Please enter a valid number!"}
 setSalaryCommand:defaultAccess("superadmin")
