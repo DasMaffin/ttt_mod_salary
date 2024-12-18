@@ -22,12 +22,12 @@ if SERVER then
     local function loadRolePointValues()
         if file.Exists("salary_mod/role_point_values.txt", "DATA") then
             SalaryMod.rolePointValues = util.JSONToTable(file.Read("salary_mod/role_point_values.txt", "DATA"))
-            if not SalaryMod.rolePointValues["points"] then
-                for role, points in pairs(SalaryMod.rolePointValues) do                    
-                    SalaryMod.rolePointValues[role] = { points = points, donatorPoints = 0 }
+            for role, data in pairs(SalaryMod.rolePointValues) do
+                if type(data) == "number" then
+                    SalaryMod.rolePointValues[role] = { points = data, donatorPoints = 0 }
                 end
-                SalaryMod.saveRolePointValues()
             end
+            SalaryMod:saveRolePointValues()
             print("Saved role point values loaded.")
         else
             print("No saved role point values found. Using defaults.")
