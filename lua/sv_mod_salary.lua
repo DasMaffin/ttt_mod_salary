@@ -23,7 +23,6 @@ if SERVER then
         if file.Exists("salary_mod/role_point_values.txt", "DATA") then
             SalaryMod.rolePointValues = util.JSONToTable(file.Read("salary_mod/role_point_values.txt", "DATA"))
             if not SalaryMod.rolePointValues["points"] then
-                PrintTable(SalaryMod.rolePointValues)
                 for role, points in pairs(SalaryMod.rolePointValues) do                    
                     SalaryMod.rolePointValues[role] = { points = points, donatorPoints = 0 }
                 end
